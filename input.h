@@ -13,6 +13,8 @@
 #define BTN_STATE_PLAY			0x40
 #define BTN_STATE_EXT			0x80
 
+#define BTN_STATE_LEARN			(BTN_STATE_MUTE | BTN_STATE_VOLUP | BTN_STATE_VOLDN)
+
 typedef enum {
 	CMD_RC5_MUTE,
 	CMD_RC5_VOLUP,
@@ -32,17 +34,11 @@ typedef enum {
 	CMD_BTN_STOP,
 	CMD_BTN_PLAY,
 
-	CMD_BTN_MUTE_LONG,
-	CMD_BTN_VOLUP_LONG,
-	CMD_BTN_VOLDN_LONG,
-	CMD_BTN_NEXT_LONG,
-	CMD_BTN_PREV_LONG,
-	CMD_BTN_STOP_LONG,
-	CMD_BTN_PLAY_LONG,
+	CMD_LEARN_MODE,
 
 	CMD_END
 
-} cmdID;
+} CmdID;
 
 /* Handling long press actions */
 #define SHORT_PRESS				50
@@ -50,12 +46,10 @@ typedef enum {
 #define AUTOREPEAT				100
 
 void inputInit();
+void rc5SaveButton(CmdID cmdid);
 
-cmdID getBtnCmd(void);
+CmdID getCommand(void);
 
-uint16_t getRC5Buf(void);
-uint16_t getBtnBuf(void);
-
-void ledFlash(uint16_t time);
+void ledFlash(uint8_t time);
 
 #endif /* INPUT_H */

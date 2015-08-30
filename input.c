@@ -7,7 +7,7 @@
 #include "rc5.h"
 #include "eeprom.h"
 
-static volatile cmdID cmdBuf;
+static volatile CmdID cmdBuf;
 
 /* Previous state */
 static volatile uint16_t rc5SaveBuf;
@@ -17,12 +17,21 @@ static volatile uint8_t btnPrev = BTN_STATE_IDLE;
 static uint8_t rc5DeviceAddr;
 static uint8_t rcCode[CMD_BTN_MUTE];				/* Array with rc5 commands */
 
-uint16_t ledTimer;
+static uint8_t ledTimer;
+
+static CmdID rc5CmdIndex(uint8_t rc5Cmd)
+{
+	CmdID i;
+
+	for (i = 0; i < CMD_RC5_END; i++)
+		if (rc5Cmd == rcCode[i])
+			return i;
+
+	return CMD_RC5_END;
+}
 
 void inputInit()
 {
-	uint8_t i;
-
 	/* Setup LED */
 	DDR(LED) |= LED_LINE;
 
@@ -48,24 +57,28 @@ void inputInit()
 
 	/* Load RC5 device address and commands from eeprom */
 	rc5DeviceAddr = eeprom_read_byte((uint8_t*)EEPROM_RC5_ADDR);
-	for (i = 0; i < CMD_RC5_END; i++)
-		rcCode[i] = eeprom_read_byte((uint8_t*)EEPROM_RC5_CMD + i);
+	eeprom_read_block(rcCode, (uint8_t*)EEPROM_RC5_CMD, CMD_RC5_END);
 
-	cmdBuf = CMD_RC5_END;
+	cmdBuf = CMD_END;
 	ledTimer = 0;
 
 	return;
 }
 
-static uint8_t rc5CmdIndex(uint8_t rc5Cmd)
+void rc5SaveButton(CmdID cmdID)
 {
-	uint8_t i;
+	uint8_t addr, cmd;
 
-	for (i = 0; i < CMD_RC5_END; i++)
-		if (rc5Cmd == rcCode[i])
-			return i;
+	addr = (rc5SaveBuf & 0x07C0)>>6;
+	cmd = rc5SaveBuf & 0x003F;
 
-	return CMD_RC5_END;
+	eeprom_update_byte((uint8_t*)EEPROM_RC5_ADDR, addr);
+	eeprom_update_byte((uint8_t*)(EEPROM_RC5_CMD + cmdID), cmd);
+
+	rc5DeviceAddr = addr;
+	rcCode[cmdID] = cmd;
+
+	return;
 }
 
 ISR (TIMER0_OVF_vect)
@@ -97,26 +110,8 @@ ISR (TIMER0_OVF_vect)
 			btnCnt++;
 			if (btnCnt == LONG_PRESS) {
 				switch (btnPrev) {
-				case BTN_STATE_MUTE:
-					cmdBuf = CMD_BTN_MUTE_LONG;
-					break;
-				case BTN_STATE_VOLUP:
-					cmdBuf = CMD_BTN_VOLUP_LONG;
-					break;
-				case BTN_STATE_VOLDN:
-					cmdBuf = CMD_BTN_VOLDN_LONG;
-					break;
-				case BTN_STATE_NEXT:
-					cmdBuf = CMD_BTN_NEXT_LONG;
-					break;
-				case BTN_STATE_PREV:
-					cmdBuf = CMD_BTN_PREV_LONG;
-					break;
-				case BTN_STATE_STOP:
-					cmdBuf = CMD_BTN_STOP_LONG;
-					break;
-				case BTN_STATE_PLAY:
-					cmdBuf = CMD_BTN_PLAY_LONG;
+				case BTN_STATE_LEARN:
+					cmdBuf = CMD_LEARN_MODE;
 					break;
 				}
 			} else if(btnCnt == LONG_PRESS + AUTOREPEAT) {
@@ -171,7 +166,7 @@ ISR (TIMER0_OVF_vect)
 	static uint8_t togBitNow = 0;
 	static uint8_t togBitPrev = 0;
 
-	uint8_t rc5CmdBuf = CMD_RC5_END;
+	CmdID rc5CmdBuf = CMD_END;
 	uint8_t rc5Cmd;
 
 	if ((rc5Buf != RC5_BUF_EMPTY) && ((rc5Buf & RC5_ADDR_MASK) >> 6 == rc5DeviceAddr)) {
@@ -194,45 +189,37 @@ ISR (TIMER0_OVF_vect)
 		togBitPrev = togBitNow;
 	}
 
-	if (cmdBuf == CMD_RC5_END)
+	if (cmdBuf == CMD_END)
 		cmdBuf = rc5CmdBuf;
 
 	/* Time from last IR command */
 	if (rc5Timer < 1000)
 		rc5Timer++;
 
-	if (ledTimer > 0)
+	if (ledTimer > 0) {
 		ledTimer--;
-	else
-		PORT(LED) &= ~LED_LINE;
+		if (ledTimer & 0x20)
+			PORT(LED) |= LED_LINE;
+		else
+			PORT(LED) &= ~LED_LINE;
+	}
 
 	return;
 };
 
-cmdID getBtnCmd(void)
+CmdID getCommand(void)
 {
-	cmdID ret;
+	CmdID ret;
 
 	ret = cmdBuf;
-	cmdBuf = CMD_RC5_END;
+	cmdBuf = CMD_END;
 
 	return ret;
 }
 
-uint16_t getRC5Buf(void)
+void ledFlash(uint8_t time)
 {
-	return rc5SaveBuf;
-}
-
-uint16_t getBtnBuf(void)
-{
-	return btnSaveBuf;
-}
-
-void ledFlash(uint16_t time)
-{
-	ledTimer = time;
-	PORT(LED) |= LED_LINE;
+	ledTimer = time << 6;
 
 	return;
 }
