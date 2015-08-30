@@ -2,7 +2,7 @@
 #define PINS_H
 
 #include <avr/io.h>
-#include "arduino.h"
+#include <avr/iom8.h>
 
 #define CONCAT(x,y)			x ## y
 
@@ -10,36 +10,36 @@
 #define PORT(x)				CONCAT(PORT,x)
 #define PIN(x)				CONCAT(PIN,x)
 
-#define LED					ARDUINO_A0
-#define LED_LINE			ARDUINO_A0_LINE
+#define LED					D
+#define LED_LINE			(1<<7)
 
-#define PCM2705_DPLUS		ARDUINO_D10
-#define PCM2705_DPLUS_LINE	ARDUINO_D10_LINE
+#define PCM2705_DPLUS		B
+#define PCM2705_DPLUS_LINE	(1<<1)
 
-#define PCM2705_MD			ARDUINO_D11
-#define PCM2705_MD_LINE		ARDUINO_D11_LINE
-#define PCM2705_MC			ARDUINO_D12
-#define PCM2705_MC_LINE		ARDUINO_D12_LINE
-#define PCM2705_MS			ARDUINO_D13
-#define PCM2705_MS_LINE		ARDUINO_D13_LINE
+#define PCM2705_MD			B
+#define PCM2705_MD_LINE		(1<<7)
+#define PCM2705_MC			D
+#define PCM2705_MC_LINE		(1<<5)
+#define PCM2705_MS			B
+#define PCM2705_MS_LINE		(1<<6)
 
 #define RC5					D
-#define RC5_LINE			(1<<1)
+#define RC5_LINE			(1<<3)
 
 /* Buttons definitions */
-#define BUTTON_0			ARDUINO_D7
-#define BUTTON_0_LINE		ARDUINO_D7_LINE
-#define BUTTON_1			ARDUINO_D6
-#define BUTTON_1_LINE		ARDUINO_D6_LINE
-#define BUTTON_2			ARDUINO_D5
-#define BUTTON_2_LINE		ARDUINO_D5_LINE
-#define BUTTON_3			ARDUINO_D4
-#define BUTTON_3_LINE		ARDUINO_D4_LINE
-#define BUTTON_4			ARDUINO_D3
-#define BUTTON_4_LINE		ARDUINO_D3_LINE
-#define BUTTON_5			ARDUINO_D2
-#define BUTTON_5_LINE		ARDUINO_D2_LINE
-#define BUTTON_6			ARDUINO_D1
-#define BUTTON_6_LINE		ARDUINO_D1_LINE
+#define BUTTON_0			B
+#define BUTTON_0_LINE		(1<<0)
+#define BUTTON_1			C
+#define BUTTON_1_LINE		(1<<3)
+#define BUTTON_2			B
+#define BUTTON_2_LINE		(1<<4)
+#define BUTTON_3			B
+#define BUTTON_3_LINE		(1<<5)
+#define BUTTON_4			B
+#define BUTTON_4_LINE		(1<<3)
+#define BUTTON_5			C
+#define BUTTON_5_LINE		(1<<1)
+#define BUTTON_6			C
+#define BUTTON_6_LINE		(1<<2)
 
 #endif /* PINS_H */

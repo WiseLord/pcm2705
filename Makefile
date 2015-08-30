@@ -1,7 +1,7 @@
 TARG = rgbled
 
-MCU = atmega32u4
-F_CPU = 16000000
+MCU = atmega8
+F_CPU = 1000000
 
 KS0066_WIRE = KS0066_WIRE_PCF8574
 
@@ -21,8 +21,8 @@ OBJCOPY  = avr-objcopy
 # Avrdude flasher
 AVRDUDE  = avrdude
 AD_MCU = -p $(MCU)
-AD_PROG = -c avr109
-AD_PORT = -P /dev/ttyACM0
+#AD_PROG = -c avr109
+#AD_PORT = -P /dev/ttyACM0
 
 AD_CMDLINE = $(AD_MCU) $(AD_PROG) $(AD_PORT)
 

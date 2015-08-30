@@ -50,9 +50,9 @@ typedef enum {
 } cmdID;
 
 /* Handling long press actions */
-#define SHORT_PRESS				100
-#define LONG_PRESS				600
-#define AUTOREPEAT				200
+#define SHORT_PRESS				50
+#define LONG_PRESS				300
+#define AUTOREPEAT				100
 
 void inputInit();
 

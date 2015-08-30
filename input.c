@@ -43,15 +43,8 @@ void inputInit()
 	PORT(BUTTON_5) |= BUTTON_5_LINE;
 	PORT(BUTTON_6) |= BUTTON_6_LINE;
 
-//	/* Set timer prescaller to 128 (125 kHz) and reset on match*/
-//	TCCR2 = ((1<<CS22) | (0<<CS21) | (1<<CS20) | (1<<WGM21));
-//	OCR2 = 125;										/* 125000/125 => 1000 polls/sec */
-//	TCNT2 = 0;										/* Reset timer value */
-//	TIMSK |= (1<<OCIE2);							/* Enable timer compare match interrupt */
-
-	/* Set timer prescaller to 64 (250 kHz) */
-	TIMSK0 |= (1<<TOIE0);							/* Enable Timer0 overflow interrupt */
-	TCCR0B |= (0<<CS02) | (1<<CS01) | (1<<CS00);	/* No prescaler, 16M/64 = 250000 Hz */
+	TCCR0 |= (0<<CS02) | (1<<CS01) | (0<<CS00);		/* Prescaler = 8, 1M/8 = 125kHz */
+	TIMSK |= (1<<TOIE0);							/* Enable timer compare match interrupt */
 
 	/* Load RC5 device address and commands from eeprom */
 	rc5DeviceAddr = eeprom_read_byte((uint8_t*)EEPROM_RC5_ADDR);
@@ -75,7 +68,6 @@ static uint8_t rc5CmdIndex(uint8_t rc5Cmd)
 	return CMD_EMPTY;
 }
 
-//ISR (TIMER2_COMP_vect)
 ISR (TIMER0_OVF_vect)
 {
 	static int16_t btnCnt = 0;						/* Buttons press duration value */
