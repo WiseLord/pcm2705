@@ -12,10 +12,10 @@ static volatile cmdID cmdBuf;
 /* Previous state */
 static volatile uint16_t rc5SaveBuf;
 static volatile uint8_t btnSaveBuf;
-static volatile uint8_t btnPrev = BTN_STATE_0;
+static volatile uint8_t btnPrev = BTN_STATE_IDLE;
 
 static uint8_t rc5DeviceAddr;
-static uint8_t rcCode[CMD_BTN_0];				/* Array with rc5 commands */
+static uint8_t rcCode[CMD_BTN_MUTE];				/* Array with rc5 commands */
 
 uint16_t ledTimer;
 
@@ -27,31 +27,31 @@ void inputInit()
 	DDR(LED) |= LED_LINE;
 
 	/* Setup buttons and encoder as inputs with pull-up resistors */
-	DDR(BUTTON_0) &= ~BUTTON_0_LINE;
-	DDR(BUTTON_1) &= ~BUTTON_1_LINE;
-	DDR(BUTTON_2) &= ~BUTTON_2_LINE;
-	DDR(BUTTON_3) &= ~BUTTON_3_LINE;
-	DDR(BUTTON_4) &= ~BUTTON_4_LINE;
-	DDR(BUTTON_5) &= ~BUTTON_5_LINE;
-	DDR(BUTTON_6) &= ~BUTTON_6_LINE;
+	DDR(BTN_MUTE) &= ~BTN_MUTE_LINE;
+	DDR(BTN_VOLUP) &= ~BTN_VOLUP_LINE;
+	DDR(BTN_VOLDN) &= ~BTN_VOLDN_LINE;
+	DDR(BTN_NEXT) &= ~BTN_NEXT_LINE;
+	DDR(BTN_PREV) &= ~BTN_PREV_LINE;
+	DDR(BTN_STOP) &= ~BTN_STOP_LINE;
+	DDR(BTN_PLAY) &= ~BTN_PLAY_LINE;
 
-	PORT(BUTTON_0) |= BUTTON_0_LINE;
-	PORT(BUTTON_1) |= BUTTON_1_LINE;
-	PORT(BUTTON_2) |= BUTTON_2_LINE;
-	PORT(BUTTON_3) |= BUTTON_3_LINE;
-	PORT(BUTTON_4) |= BUTTON_4_LINE;
-	PORT(BUTTON_5) |= BUTTON_5_LINE;
-	PORT(BUTTON_6) |= BUTTON_6_LINE;
+	PORT(BTN_MUTE) |= BTN_MUTE_LINE;
+	PORT(BTN_VOLUP) |= BTN_VOLUP_LINE;
+	PORT(BTN_VOLDN) |= BTN_VOLDN_LINE;
+	PORT(BTN_NEXT) |= BTN_NEXT_LINE;
+	PORT(BTN_PREV) |= BTN_PREV_LINE;
+	PORT(BTN_STOP) |= BTN_STOP_LINE;
+	PORT(BTN_PLAY) |= BTN_PLAY_LINE;
 
 	TCCR0 |= (0<<CS02) | (1<<CS01) | (0<<CS00);		/* Prescaler = 8, 1M/8 = 125kHz */
 	TIMSK |= (1<<TOIE0);							/* Enable timer compare match interrupt */
 
 	/* Load RC5 device address and commands from eeprom */
 	rc5DeviceAddr = eeprom_read_byte((uint8_t*)EEPROM_RC5_ADDR);
-	for (i = 0; i < RC5_CMD_COUNT; i++)
+	for (i = 0; i < CMD_RC5_END; i++)
 		rcCode[i] = eeprom_read_byte((uint8_t*)EEPROM_RC5_CMD + i);
 
-	cmdBuf = CMD_EMPTY;
+	cmdBuf = CMD_RC5_END;
 	ledTimer = 0;
 
 	return;
@@ -61,11 +61,11 @@ static uint8_t rc5CmdIndex(uint8_t rc5Cmd)
 {
 	uint8_t i;
 
-	for (i = 0; i < RC5_CMD_COUNT; i++)
+	for (i = 0; i < CMD_RC5_END; i++)
 		if (rc5Cmd == rcCode[i])
 			return i;
 
-	return CMD_EMPTY;
+	return CMD_RC5_END;
 }
 
 ISR (TIMER0_OVF_vect)
@@ -74,58 +74,58 @@ ISR (TIMER0_OVF_vect)
 	static uint16_t rc5Timer;
 
 	/* Current state */
-	uint8_t btnNow = BTN_STATE_0;
+	uint8_t btnNow = BTN_STATE_IDLE;
 
-	if (~PIN(BUTTON_0) & BUTTON_0_LINE)
-		btnNow |= BTN_0;
-	if (~PIN(BUTTON_1) & BUTTON_1_LINE)
-		btnNow |= BTN_1;
-	if (~PIN(BUTTON_2) & BUTTON_2_LINE)
-		btnNow |= BTN_2;
-	if (~PIN(BUTTON_3) & BUTTON_3_LINE)
-		btnNow |= BTN_3;
-	if (~PIN(BUTTON_4) & BUTTON_4_LINE)
-		btnNow |= BTN_4;
-	if (~PIN(BUTTON_5) & BUTTON_5_LINE)
-		btnNow |= BTN_5;
-	if (~PIN(BUTTON_6) & BUTTON_6_LINE)
-		btnNow |= BTN_6;
+	if (~PIN(BTN_MUTE) & BTN_MUTE_LINE)
+		btnNow |= BTN_STATE_MUTE;
+	if (~PIN(BTN_VOLUP) & BTN_VOLUP_LINE)
+		btnNow |= BTN_STATE_VOLUP;
+	if (~PIN(BTN_VOLDN) & BTN_VOLDN_LINE)
+		btnNow |= BTN_STATE_VOLDN;
+	if (~PIN(BTN_NEXT) & BTN_NEXT_LINE)
+		btnNow |= BTN_STATE_NEXT;
+	if (~PIN(BTN_PREV) & BTN_PREV_LINE)
+		btnNow |= BTN_STATE_PREV;
+	if (~PIN(BTN_STOP) & BTN_STOP_LINE)
+		btnNow |= BTN_STATE_STOP;
+	if (~PIN(BTN_PLAY) & BTN_PLAY_LINE)
+		btnNow |= BTN_STATE_PLAY;
 
 	/* If button event has happened, place it to command buffer */
 	if (btnNow) {
 		if (btnNow == btnPrev) {
 			btnCnt++;
 			if (btnCnt == LONG_PRESS) {
-//				switch (btnPrev) {
-//				case BTN_0:
-//					cmdBuf = CMD_BTN_0_LONG;
-//					break;
-//				case BTN_1:
-//					cmdBuf = CMD_BTN_1_LONG;
-//					break;
-//				case BTN_2:
-//					cmdBuf = CMD_BTN_2_LONG;
-//					break;
-//				case BTN_3:
-//					cmdBuf = CMD_BTN_3_LONG;
-//					break;
-//				case BTN_4:
-//					cmdBuf = CMD_BTN_4_LONG;
-//					break;
-//				case BTN_5:
-//					cmdBuf = CMD_BTN_5_LONG;
-//					break;
-//				case BTN_6:
-//					cmdBuf = CMD_BTN_6_LONG;
-//					break;
-//				}
+				switch (btnPrev) {
+				case BTN_STATE_MUTE:
+					cmdBuf = CMD_BTN_MUTE_LONG;
+					break;
+				case BTN_STATE_VOLUP:
+					cmdBuf = CMD_BTN_VOLUP_LONG;
+					break;
+				case BTN_STATE_VOLDN:
+					cmdBuf = CMD_BTN_VOLDN_LONG;
+					break;
+				case BTN_STATE_NEXT:
+					cmdBuf = CMD_BTN_NEXT_LONG;
+					break;
+				case BTN_STATE_PREV:
+					cmdBuf = CMD_BTN_PREV_LONG;
+					break;
+				case BTN_STATE_STOP:
+					cmdBuf = CMD_BTN_STOP_LONG;
+					break;
+				case BTN_STATE_PLAY:
+					cmdBuf = CMD_BTN_PLAY_LONG;
+					break;
+				}
 			} else if(btnCnt == LONG_PRESS + AUTOREPEAT) {
 				switch (btnPrev) {
-				case BTN_1:
-					cmdBuf = CMD_BTN_1_REPEAT;
+				case BTN_STATE_VOLUP:
+					cmdBuf = CMD_BTN_VOLUP;
 					break;
-				case BTN_2:
-					cmdBuf = CMD_BTN_2_REPEAT;
+				case BTN_STATE_VOLDN:
+					cmdBuf = CMD_BTN_VOLDN;
 					break;
 				}
 				btnCnt = LONG_PRESS + 1;
@@ -136,26 +136,26 @@ ISR (TIMER0_OVF_vect)
 	} else {
 		if ((btnCnt > SHORT_PRESS) && (btnCnt < LONG_PRESS)) {
 			switch (btnPrev) {
-			case BTN_0:
-				cmdBuf = CMD_BTN_0;
+			case BTN_STATE_MUTE:
+				cmdBuf = CMD_BTN_MUTE;
 				break;
-			case BTN_1:
-				cmdBuf = CMD_BTN_1;
+			case BTN_STATE_VOLUP:
+				cmdBuf = CMD_BTN_VOLUP;
 				break;
-			case BTN_2:
-				cmdBuf = CMD_BTN_2;
+			case BTN_STATE_VOLDN:
+				cmdBuf = CMD_BTN_VOLDN;
 				break;
-			case BTN_3:
-				cmdBuf = CMD_BTN_3;
+			case BTN_STATE_NEXT:
+				cmdBuf = CMD_BTN_NEXT;
 				break;
-			case BTN_4:
-				cmdBuf = CMD_BTN_4;
+			case BTN_STATE_PREV:
+				cmdBuf = CMD_BTN_PREV;
 				break;
-			case BTN_5:
-				cmdBuf = CMD_BTN_5;
+			case BTN_STATE_STOP:
+				cmdBuf = CMD_BTN_STOP;
 				break;
-			case BTN_6:
-				cmdBuf = CMD_BTN_6;
+			case BTN_STATE_PLAY:
+				cmdBuf = CMD_BTN_PLAY;
 				break;
 			}
 		}
@@ -171,7 +171,7 @@ ISR (TIMER0_OVF_vect)
 	static uint8_t togBitNow = 0;
 	static uint8_t togBitPrev = 0;
 
-	uint8_t rc5CmdBuf = CMD_EMPTY;
+	uint8_t rc5CmdBuf = CMD_RC5_END;
 	uint8_t rc5Cmd;
 
 	if ((rc5Buf != RC5_BUF_EMPTY) && ((rc5Buf & RC5_ADDR_MASK) >> 6 == rc5DeviceAddr)) {
@@ -185,7 +185,7 @@ ISR (TIMER0_OVF_vect)
 			rc5Timer = 0;
 			rc5CmdBuf = rc5CmdIndex(rc5Cmd);
 		}
-		if (rc5Cmd == rcCode[CMD_RC5_VOL_UP] || rc5Cmd == rcCode[CMD_RC5_VOL_DOWN]) {
+		if (rc5Cmd == rcCode[CMD_RC5_VOLUP] || rc5Cmd == rcCode[CMD_RC5_VOLDN]) {
 			if (rc5Timer > 400) {
 				rc5Timer = 360;
 				rc5CmdBuf = rc5CmdIndex(rc5Cmd);
@@ -194,7 +194,7 @@ ISR (TIMER0_OVF_vect)
 		togBitPrev = togBitNow;
 	}
 
-	if (cmdBuf == CMD_EMPTY)
+	if (cmdBuf == CMD_RC5_END)
 		cmdBuf = rc5CmdBuf;
 
 	/* Time from last IR command */
@@ -214,7 +214,7 @@ cmdID getBtnCmd(void)
 	cmdID ret;
 
 	ret = cmdBuf;
-	cmdBuf = CMD_EMPTY;
+	cmdBuf = CMD_RC5_END;
 
 	return ret;
 }

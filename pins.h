@@ -27,19 +27,19 @@
 #define RC5_LINE			(1<<3)
 
 /* Buttons definitions */
-#define BUTTON_0			B
-#define BUTTON_0_LINE		(1<<0)
-#define BUTTON_1			C
-#define BUTTON_1_LINE		(1<<3)
-#define BUTTON_2			B
-#define BUTTON_2_LINE		(1<<4)
-#define BUTTON_3			B
-#define BUTTON_3_LINE		(1<<5)
-#define BUTTON_4			B
-#define BUTTON_4_LINE		(1<<3)
-#define BUTTON_5			C
-#define BUTTON_5_LINE		(1<<1)
-#define BUTTON_6			C
-#define BUTTON_6_LINE		(1<<2)
+#define BTN_MUTE			B
+#define BTN_MUTE_LINE		(1<<0)
+#define BTN_VOLUP			C
+#define BTN_VOLUP_LINE		(1<<3)
+#define BTN_VOLDN			B
+#define BTN_VOLDN_LINE		(1<<4)
+#define BTN_NEXT			B
+#define BTN_NEXT_LINE		(1<<5)
+#define BTN_PREV			B
+#define BTN_PREV_LINE		(1<<3)
+#define BTN_STOP			C
+#define BTN_STOP_LINE		(1<<1)
+#define BTN_PLAY			C
+#define BTN_PLAY_LINE		(1<<2)
 
 #endif /* PINS_H */
