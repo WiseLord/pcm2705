@@ -25,8 +25,8 @@ void rc5Init(void)
 	MCUCR |= (1<<ISC10);				/* Set INT1 to trigger on any edge */
 	DDR(RC5) &= ~RC5_LINE;				/* Set PD1 (INT1) to input */
 	TCCR1A = 0;							/* Reset Timer1 counter */
-	TCCR1B = (1<<CS11);					/* Set Timer1 prescaler to 8 (2MHz) */
-//	GICR |= (1<<INT1);					/* Enable INT1 interrupt */
+	TCCR1B = (1<<CS10);					/* Timer1 prescaler = 1 (1MHz) */
+	GICR |= (1<<INT1);					/* Enable INT1 interrupt */
 
 	rc5Reset();
 

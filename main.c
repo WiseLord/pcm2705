@@ -4,11 +4,13 @@
 #include "pins.h"
 #include "pcm2705.h"
 #include "input.h"
+#include "rc5.h"
 
 void hwInit(void)
 {
 	pcm2705Init();
 	inputInit();
+	rc5Init();
 
 	sei();
 

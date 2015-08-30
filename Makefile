@@ -47,7 +47,10 @@ clean:
 	rm -rf $(OBJDIR)
 
 flash: $(TARG)
-	$(AVRDUDE) $(AD_CMDLINE) -p $(MCU) -U flash:w:flash/$(TARG).hex:i
+	$(AVRDUDE) $(AD_CMDLINE) -U flash:w:flash/$(TARG).hex:i
+
+eeprom:
+	$(AVRDUDE) $(AD_CMDLINE) -U eeprom:w:eeprom.bin:r
 
 fuse:
-	$(AVRDUDE) $(AD_CMDLINE) -U lfuse:w:0xff:m -U hfuse:w:0xd8:m -U efuse:w:0xCB:m
+	$(AVRDUDE) $(AD_CMDLINE) -U lfuse:w:0xA1:m -U hfuse:w:0xd1:m
