@@ -1,4 +1,4 @@
-TARG = rgbled
+TARG = pcm2705
 
 MCU = atmega8
 F_CPU = 1000000
@@ -53,4 +53,4 @@ eeprom:
 	$(AVRDUDE) $(AD_CMDLINE) -U eeprom:w:eeprom.bin:r
 
 fuse:
-	$(AVRDUDE) $(AD_CMDLINE) -U lfuse:w:0xA1:m -U hfuse:w:0xd1:m
+	$(AVRDUDE) $(AD_CMDLINE) -U lfuse:w:0xA1:m -U hfuse:w:0xD1:m
