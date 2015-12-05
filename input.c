@@ -4,7 +4,7 @@
 #include <avr/interrupt.h>
 #include <avr/eeprom.h>
 
-#include "rc5.h"
+#include "remote.h"
 #include "eeprom.h"
 
 static volatile CmdID cmdBuf;
@@ -14,20 +14,31 @@ static volatile uint16_t rc5SaveBuf;
 static volatile uint8_t btnSaveBuf;
 static volatile uint8_t btnPrev = BTN_STATE_IDLE;
 
-static uint8_t rc5DeviceAddr;
-static uint8_t rcCode[CMD_BTN_MUTE];				/* Array with rc5 commands */
+static uint8_t rcType;
+static uint8_t rcAddr;
+static uint8_t rcCode[CMD_RC_END];					/* Array with rc5 commands */
 
 static uint8_t ledTimer;
+static uint8_t learn;
 
-static CmdID rc5CmdIndex(uint8_t rc5Cmd)
+static CmdID rcCmdIndex(uint8_t rcCmd)
 {
 	CmdID i;
 
-	for (i = 0; i < CMD_RC5_END; i++)
-		if (rc5Cmd == rcCode[i])
+	for (i = 0; i < CMD_RC_END; i++)
+		if (rcCmd == rcCode[i])
 			return i;
 
-	return CMD_RC5_END;
+	return CMD_RC_END;
+}
+
+void rcCodesInit(void)
+{
+	rcType = eeprom_read_byte((uint8_t*)EEPROM_RC_TYPE);
+	rcAddr = eeprom_read_byte((uint8_t*)EEPROM_RC_ADDR);
+	eeprom_read_block(rcCode, (uint8_t*)EEPROM_RC_CMD, CMD_RC_END);
+
+	return;
 }
 
 void inputInit()
@@ -52,12 +63,10 @@ void inputInit()
 	PORT(BTN_STOP) |= BTN_STOP_LINE;
 	PORT(BTN_PLAY) |= BTN_PLAY_LINE;
 
-	TCCR0 |= (0<<CS02) | (1<<CS01) | (0<<CS00);		/* Prescaler = 8, 1M/8 = 125kHz */
+	TCCR0 |= (0<<CS02) | (1<<CS01) | (1<<CS00);		/* Prescaler = 64, 125kHz */
 	TIMSK |= (1<<TOIE0);							/* Enable timer compare match interrupt */
 
-	/* Load RC5 device address and commands from eeprom */
-	rc5DeviceAddr = eeprom_read_byte((uint8_t*)EEPROM_RC5_ADDR);
-	eeprom_read_block(rcCode, (uint8_t*)EEPROM_RC5_CMD, CMD_RC5_END);
+	rcCodesInit();
 
 	cmdBuf = CMD_END;
 	ledTimer = 0;
@@ -67,16 +76,14 @@ void inputInit()
 
 void rc5SaveButton(CmdID cmdID)
 {
-	uint8_t addr, cmd;
+	IRData irBuf = getIrData();
 
-	addr = (rc5SaveBuf & 0x07C0)>>6;
-	cmd = rc5SaveBuf & 0x003F;
+	eeprom_update_byte((uint8_t*)EEPROM_RC_TYPE, irBuf.type);
+	eeprom_update_byte((uint8_t*)EEPROM_RC_ADDR, irBuf.address);
+	eeprom_update_byte((uint8_t*)EEPROM_RC_CMD + cmdID, irBuf.command);
 
-	eeprom_update_byte((uint8_t*)EEPROM_RC5_ADDR, addr);
-	eeprom_update_byte((uint8_t*)(EEPROM_RC5_CMD + cmdID), cmd);
-
-	rc5DeviceAddr = addr;
-	rcCode[cmdID] = cmd;
+	// Re-read new codes array from EEPROM
+	rcCodesInit();
 
 	return;
 }
@@ -84,7 +91,7 @@ void rc5SaveButton(CmdID cmdID)
 ISR (TIMER0_OVF_vect)
 {
 	static int16_t btnCnt = 0;						/* Buttons press duration value */
-	static uint16_t rc5Timer;
+	static uint16_t rcTimer;
 
 	/* Current state */
 	uint8_t btnNow = BTN_STATE_IDLE;
@@ -159,42 +166,29 @@ ISR (TIMER0_OVF_vect)
 	btnSaveBuf = btnNow;
 
 	/* Place RC5 event to command buffer if enough RC5 timer ticks */
-	uint16_t rc5Buf = getRC5RawBuf();
-	if (rc5Buf != RC5_BUF_EMPTY)
-		rc5SaveBuf = rc5Buf;
+	IRData ir = takeIrData();
 
-	static uint8_t togBitNow = 0;
-	static uint8_t togBitPrev = 0;
+	CmdID rcCmdBuf = CMD_END;
 
-	CmdID rc5CmdBuf = CMD_END;
-	uint8_t rc5Cmd;
-
-	if ((rc5Buf != RC5_BUF_EMPTY) && ((rc5Buf & RC5_ADDR_MASK) >> 6 == rc5DeviceAddr)) {
-		if (rc5Buf & RC5_TOGB_MASK)
-			togBitNow = 1;
-		else
-			togBitNow = 0;
-
-		rc5Cmd = rc5Buf & RC5_COMM_MASK;
-		if ((togBitNow != togBitPrev) || (rc5Timer > 800)) {
-			rc5Timer = 0;
-			rc5CmdBuf = rc5CmdIndex(rc5Cmd);
+	if (ir.ready && (learn ? 1 : (ir.type == rcType && ir.address == rcAddr))) {
+		if (!ir.repeat || (rcTimer > 800)) {
+			rcTimer = 0;
+			rcCmdBuf = rcCmdIndex(ir.command);
 		}
-		if (rc5Cmd == rcCode[CMD_RC5_VOLUP] || rc5Cmd == rcCode[CMD_RC5_VOLDN]) {
-			if (rc5Timer > 400) {
-				rc5Timer = 360;
-				rc5CmdBuf = rc5CmdIndex(rc5Cmd);
+		if (ir.command == rcCode[CMD_RC_VOL_UP] || ir.command == rcCode[CMD_RC_VOL_DOWN]) {
+			if (rcTimer > 400) {
+				rcTimer = 360;
+				rcCmdBuf = rcCmdIndex(ir.command);
 			}
 		}
-		togBitPrev = togBitNow;
 	}
 
 	if (cmdBuf == CMD_END)
-		cmdBuf = rc5CmdBuf;
+		cmdBuf = rcCmdBuf;
 
 	/* Time from last IR command */
-	if (rc5Timer < 1000)
-		rc5Timer++;
+	if (rcTimer < 1000)
+		rcTimer++;
 
 	if (ledTimer > 0) {
 		ledTimer--;
@@ -220,6 +214,13 @@ CmdID getCommand(void)
 void ledFlash(uint8_t time)
 {
 	ledTimer = time << 6;
+
+	return;
+}
+
+void setLearn(uint8_t status)
+{
+	learn = status;
 
 	return;
 }

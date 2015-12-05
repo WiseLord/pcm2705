@@ -23,8 +23,8 @@
 #define PCM2705_MS			B
 #define PCM2705_MS_LINE		(1<<6)
 
-#define RC5					D
-#define RC5_LINE			(1<<3)
+#define RC					D
+#define RC_LINE				(1<<3)
 
 /* Buttons definitions */
 #define BTN_MUTE			B

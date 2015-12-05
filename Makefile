@@ -1,7 +1,7 @@
 TARG=pcm2705
 
 MCU = atmega8
-F_CPU = 1000000L
+F_CPU = 8000000L
 
 # Source files
 SRCS = $(wildcard *.c)
@@ -24,7 +24,7 @@ AD_MCU = -p $(MCU)
 #AD_PROG = -c stk500v2
 #AD_PORT = -P avrdoper
 
-AD_CMDLINE = $(AD_MCU) $(AD_PROG) $(AD_PORT) -B 20 -V
+AD_CMDLINE = $(AD_MCU) $(AD_PROG) $(AD_PORT) -B 5 -V
 
 OBJS = $(addprefix $(BUILDDIR)/, $(SRCS:.c=.o))
 ELF = $(BUILDDIR)/$(TARG).elf
@@ -56,7 +56,7 @@ eeprom:
 
 .PHONY: fuse
 fuse:
-	$(AVRDUDE) $(AD_CMDLINE) -U lfuse:w:0xA1:m -U hfuse:w:0xD1:m
+	$(AVRDUDE) $(AD_CMDLINE) -U lfuse:w:0x24:m -U hfuse:w:0xD1:m
 
 # Other dependencies
 -include $(wildcard $(BUILDDIR)/*.d)

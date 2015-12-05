@@ -3,9 +3,9 @@
 
 #include <inttypes.h>
 
-/* RC5 address */
-#define EEPROM_RC5_ADDR				0x00
-/* RC5 commands array */
-#define EEPROM_RC5_CMD				0x02
+/* RC5 eeprom data*/
+#define EEPROM_RC_TYPE				0x00
+#define EEPROM_RC_ADDR				0x01
+#define EEPROM_RC_CMD				0x02
 
 #endif /* EEPROM_H */

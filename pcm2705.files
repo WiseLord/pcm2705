@@ -6,5 +6,5 @@ Makefile
 pcm2705.c
 pcm2705.h
 pins.h
-rc5.c
-rc5.h
+remote.c
+remote.h

@@ -4,7 +4,7 @@
 #include "pins.h"
 #include "pcm2705.h"
 #include "input.h"
-#include "rc5.h"
+#include "remote.h"
 
 typedef enum {
 	MODE_WORK,
@@ -16,8 +16,8 @@ typedef enum {
 void hwInit(void)
 {
 	pcm2705Init();
+	rcInit();
 	inputInit();
-	rc5Init();
 
 	sei();
 
@@ -35,14 +35,16 @@ int main(void)
 		cmd = getCommand();
 
 		/* Flash once on any simple command */
-		if (cmd != CMD_END && (mode == MODE_LEARN || cmd != CMD_RC5_END))
+		if (cmd != CMD_END && (mode == MODE_LEARN || cmd != CMD_RC_END))
 			ledFlash(1);
 
 		if (cmd == CMD_LEARN_MODE) {
 			if (mode == MODE_WORK) {
 				mode = MODE_LEARN;
+				setLearn(1);
 			} else {
 				mode = MODE_WORK;
+				setLearn(0);
 			}
 			ledFlash(3);
 		} else if (cmd >= CMD_BTN_MUTE && cmd <= CMD_BTN_PLAY) {
@@ -52,9 +54,9 @@ int main(void)
 				rc5SaveButton(cmd - CMD_BTN_MUTE);
 				ledFlash(2);
 			}
-		} else if (cmd >= CMD_RC5_MUTE && cmd <= CMD_RC5_PLAY) {
+		} else if (cmd >= CMD_RC_MUTE && cmd <= CMD_RC_PLAY) {
 			if (mode == MODE_WORK) {
-				pcm2705HidCmd(1<<(cmd - CMD_RC5_MUTE));
+				pcm2705HidCmd(1<<(cmd - CMD_RC_MUTE));
 			}
 		}
 	}

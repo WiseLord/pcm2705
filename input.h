@@ -16,15 +16,15 @@
 #define BTN_STATE_LEARN			(BTN_STATE_MUTE | BTN_STATE_VOLUP | BTN_STATE_VOLDN)
 
 typedef enum {
-	CMD_RC5_MUTE,
-	CMD_RC5_VOLUP,
-	CMD_RC5_VOLDN,
-	CMD_RC5_NEXT,
-	CMD_RC5_PREV,
-	CMD_RC5_STOP,
-	CMD_RC5_PLAY,
+	CMD_RC_MUTE,
+	CMD_RC_VOL_UP,
+	CMD_RC_VOL_DOWN,
+	CMD_RC_NEXT,
+	CMD_RC_PREV,
+	CMD_RC_STOP,
+	CMD_RC_PLAY,
 
-	CMD_RC5_END,
+	CMD_RC_END,
 
 	CMD_BTN_MUTE,
 	CMD_BTN_VOLUP,
@@ -51,5 +51,7 @@ void rc5SaveButton(CmdID cmdid);
 CmdID getCommand(void);
 
 void ledFlash(uint8_t time);
+
+void setLearn(uint8_t status);
 
 #endif /* INPUT_H */
