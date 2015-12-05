@@ -1,4 +1,6 @@
 *.o
+*.d
 *.elf
 *.hex
-*.bin
+build-*
+*.creator.user
