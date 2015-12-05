@@ -56,7 +56,7 @@ eeprom:
 
 .PHONY: fuse
 fuse:
-	$(AVRDUDE) $(AD_CMDLINE) -U lfuse:w:0x24:m -U hfuse:w:0xD1:m
+	$(AVRDUDE) $(AD_CMDLINE) -U lfuse:w:0xA4:m -U hfuse:w:0xD1:m
 
 # Other dependencies
 -include $(wildcard $(BUILDDIR)/*.d)
