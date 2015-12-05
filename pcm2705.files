@@ -1,0 +1,10 @@
+eeprom.h
+input.c
+input.h
+main.c
+Makefile
+pcm2705.c
+pcm2705.h
+pins.h
+rc5.c
+rc5.h

@@ -1,7 +1,7 @@
 TARG=pcm2705
 
 MCU = atmega8
-F_CPU = 8000000L
+F_CPU = 1000000L
 
 # Source files
 SRCS = $(wildcard *.c)
@@ -24,7 +24,7 @@ AD_MCU = -p $(MCU)
 #AD_PROG = -c stk500v2
 #AD_PORT = -P avrdoper
 
-AD_CMDLINE = $(AD_MCU) $(AD_PROG) $(AD_PORT) -V
+AD_CMDLINE = $(AD_MCU) $(AD_PROG) $(AD_PORT) -B 20 -V
 
 OBJS = $(addprefix $(BUILDDIR)/, $(SRCS:.c=.o))
 ELF = $(BUILDDIR)/$(TARG).elf
