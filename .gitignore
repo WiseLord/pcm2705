@@ -1,6 +1,7 @@
-*.o
 *.d
 *.elf
 *.hex
+*.o
+*.lss
 build-*
-*.creator.user
+*.creator.user*
