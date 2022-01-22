@@ -1,0 +1,10 @@
+../src/eeprom.h
+../src/input.c
+../src/input.h
+../src/main.c
+../src/Makefile
+../src/pcm2705.c
+../src/pcm2705.h
+../src/pins.h
+../src/remote.c
+../src/remote.h
